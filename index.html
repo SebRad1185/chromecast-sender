@@ -15,21 +15,18 @@
 
 <!-- Cast Sender bootstrap (declared BEFORE SDK is fetched) -->
 <script>
-  window.__onGCastApiAvailable = function(isAvailable) {
-    if (!isAvailable) {
-      console.warn('[Cast] API unavailable');
-      return;
-    }
+  window.__onGCastApiAvailable = (isAvailable) => {
+    if (!isAvailable) return console.warn('Cast API unavailable');
     const init = () => {
       if (window.cast && cast.framework) {
         cast.framework.CastContext.getInstance().setOptions({
-          receiverApplicationId: 'YOUR_APP_ID',
-          autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
-          customNamespaces: {
-            'urn:x-cast:workout.channel': cast.framework.CastMessageFormat.JSON
-          }
-        });
-        console.log('[Cast] CAF v3 sender initialized');
+  receiverApplicationId: '0656D6B9',  // your App ID
+  autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
+  customNamespaces: {
+    'urn:x-cast:workout.channel': cast.framework.CastMessageFormat.JSON
+  }
+});
+        console.log('CAF v3 sender initialized');
       } else {
         setTimeout(init, 100);
       }
@@ -37,9 +34,8 @@
     init();
   };
 </script>
+<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 
-<!-- 2) Then load the Cast SDK with loadCastFramework -->
-<script src="https://www.gstatic.com/cast/sdk/libs/caf_sender/v3/cast_sender_framework.js"></script>
 
 
 <script type="module">
