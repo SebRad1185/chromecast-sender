@@ -22,10 +22,7 @@
       if (window.cast && cast.framework) {
         cast.framework.CastContext.getInstance().setOptions({
           receiverApplicationId: '0656D6B9',
-          autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
-          customNamespaces: {
-            'urn:x-cast:workout.channel': cast.framework.CastMessageFormat.JSON
-          }
+          autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
         });
         console.log('CAF v3 sender initialized');
       } else {
