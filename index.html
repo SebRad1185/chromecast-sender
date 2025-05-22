@@ -1,3 +1,7 @@
+
+<!-- need to add-->
+<!-- play/pause/repeat button -->
+ <!-- Video-->>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,77 +11,77 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"/>
 
+<!-- Cast sender SDK + framework -->
+
 <!-- Cast Sender bootstrap (declared BEFORE SDK is fetched) -->
 <script>
-  window.__onGCastApiAvailable = function(isAvailable) {
-    console.log('[Cast] __onGCastApiAvailable called, available =', isAvailable);
-    if (!isAvailable) {
-      console.warn('[Cast] Chromecast API not available');
-      return;
-    }
-    
-    // Initialize Cast context
-    setTimeout(() => {
-      if (window.cast && window.cast.framework && window.cast.framework.CastContext) {
-        const context = cast.framework.CastContext.getInstance();
-        context.setOptions({
-          receiverApplicationId: '0656D6B9', // Make sure this matches your published app ID
-          autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+  window.__onGCastApiAvailable = (isAvailable) => {
+    if (!isAvailable) return console.warn('Cast API unavailable');
+    const init = () => {
+      if (window.cast && cast.framework) {
+        cast.framework.CastContext.getInstance().setOptions({
+          receiverApplicationId: '0656D6B9',
+          autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
+          customNamespaces: {
+            'urn:x-cast:workout.channel': cast.framework.CastMessageFormat.JSON
+          }
         });
-        console.log('[Cast] CastContext initialized');
-        
-        // Initialize cast controls after context is ready
-        if (window.initializeCastControls) {
-          window.initializeCastControls();
-        }
+        console.log('CAF v3 sender initialized');
       } else {
-        console.error('[Cast] Cast framework not available after timeout');
+        setTimeout(init, 100);
       }
-    }, 1000);
+    };
+    init();
   };
 </script>
+<script src="https://www.gstatic.com/cast/sdk/libs/caf_sender/v3/cast_sender_framework.js"></script>
 
-<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
   import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-database.js";
 
-  // Firebase configuration
+  // === Replace with your Firebase project configuration ===
   const firebaseConfig = {
-    apiKey: "AIzaSyA6eHJKlSB_3WsAnRZTe8AozwfxTsnDq08",
-    authDomain: "workout-bac20.firebaseapp.com",
-    databaseURL: "https://workout-bac20-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "workout-bac20",
-    storageBucket: "workout-bac20.firebasestorage.app",
-    messagingSenderId: "194637770015",
-    appId: "1:194637770015:web:06608b0760b0276b38d42a",
-    measurementId: "G-Q4G9CFLTM0"
-  };
+  apiKey: "AIzaSyA6eHJKlSB_3WsAnRZTe8AozwfxTsnDq08",
+  authDomain: "workout-bac20.firebaseapp.com",
+  databaseURL: "https://workout-bac20-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "workout-bac20",
+  storageBucket: "workout-bac20.firebasestorage.app",
+  messagingSenderId: "194637770015",
+  appId: "1:194637770015:web:06608b0760b0276b38d42a",
+  measurementId: "G-Q4G9CFLTM0"
+};
 
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
+  const db  = getDatabase(app);
   window.db = db;
 
+  /** 
+   * Write payload to /workouts/current/screen-${screenNum}
+   * @param {number|string} screenNum 
+   * @param {any} payload 
+   */
   function pushToFirebase(screenNum, payload) {
-    if (!db) {
-      console.warn("[Firebase] Not initialized, skipping push");
-      return;
-    }
-    
-    const dataWithTimestamp = {
-      ...payload,
-      timestamp: Date.now(),
-      screen: screenNum
-    };
-    
-    console.log(`[Firebase] Writing to screen-${screenNum}`, dataWithTimestamp);
-    
-    set(ref(db, `workouts/current/screen-${screenNum}`), dataWithTimestamp)
-      .then(() => console.log(`[Firebase] Successfully wrote to screen-${screenNum}`))
-      .catch((error) => console.error(`[Firebase] Push failed for screen-${screenNum}:`, error));
+  if (!db) {
+    console.warn("[Firebase] Not initialized, skipping push");
+    return;
   }
+  
+  // Add timestamp to ensure synchronization
+  const dataWithTimestamp = {
+    ...payload,
+    timestamp: Date.now(),
+    screen: screenNum
+  };
+  
+  console.log(`[Firebase] Writing to screen-${screenNum}`, dataWithTimestamp);
+  
+  set(ref(db, `workouts/current/screen-${screenNum}`), dataWithTimestamp)
+    .then(() => console.log(`[Firebase] Successfully wrote to screen-${screenNum}`))
+    .catch((error) => console.error(`[Firebase] Push failed for screen-${screenNum}:`, error));
+}
   window.pushToFirebase = pushToFirebase;
 </script>
 
@@ -174,17 +178,20 @@
       z-index: 1000;
     }
 
+    /* ===== Chromecast launcher styling ===== */
     google-cast-launcher {
-      --disconnected-color: #757575;
-      --connected-color: #4285f4;
-      --inactive-color: #bdbdbd;
-      width: 48px !important;
-      height: 48px !important;
-      margin: 8px;
-      display: inline-block;
-      min-width: 48px;
-      min-height: 48px;
-      cursor: pointer;
+      /* colours picked up by the Cast framework */
+      --disconnected-color:#757575;
+      --connected-color:#4285f4;
+      --inactive-color:#bdbdbd;
+
+      width:48px!important;      /* material-design size */
+      height:48px!important;
+      margin:8px;
+      display:inline-block;
+      min-width:48px;
+      min-height:48px;
+      cursor:pointer;
     }
 
     .action-btn {
@@ -414,47 +421,6 @@
       color: #2c3e50;
     }
 
-    .cast-controls {
-      display: flex;
-      gap: 12px;
-      margin: 12px 0;
-      flex-wrap: wrap;
-    }
-
-    .cast-control-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(255,255,255,0.1);
-      padding: 8px 12px;
-      border-radius: 6px;
-      color: #fff;
-    }
-
-    .cast-status {
-      font-size: 0.9em;
-      min-width: 120px;
-    }
-
-    .cast-link-btn {
-      background: #4285f4;
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.85em;
-    }
-
-    .cast-link-btn:hover {
-      background: #3367d6;
-    }
-
-    .cast-link-btn:disabled {
-      background: #666;
-      cursor: not-allowed;
-    }
-
     @media (min-width: 768px) and (max-width: 1024px) {
       .container {
         padding: 25px;
@@ -516,7 +482,7 @@
   <div class="container timer-view" id="timer-view">
     <button class="back-btn action-btn" id="back-btn">← Back to Workouts</button>
     <!-- Cast controls for each screen -->
-    <div id="cast-controls" class="cast-controls"></div>
+    <div id="cast-controls" style="display: flex; gap: 12px; margin: 12px 0;"></div>
     <div class="screen-container">
       <div class="screen" id="screen-1">
         <h3>Screen 1</h3>
@@ -653,7 +619,13 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  // App State Variables & DOM References
+  
+
+  
+
+  // Cast API initialization
+// Duplicate Cast init removed by patch
+  // --- App State Variables & DOM References ---
   let workouts = [];
   let currentWorkout = null;
   let timers = {};
@@ -668,109 +640,61 @@ document.addEventListener('DOMContentLoaded', () => {
   let screenModes = { "4": "exercises" };
   let timeIntervals = {};
 
-  // Cast API variables
-  let castContext = null;
-  const CAST_CHANNEL = 'urn:x-cast:workout.channel';
-  const castSessions = {1: null, 2: null, 3: null, 4: null};
-  const castControlsContainer = document.getElementById('cast-controls');
+// === Multi‑TV Cast support ===
+let castContext = null;
 
-  // Initialize Cast controls
-  function initializeCastControls() {
-    console.log('[Cast] Initializing cast controls');
-    if (!castControlsContainer) return;
-    
-    castControlsContainer.innerHTML = '';
-    for (let i = 1; i <= 4; i++) {
-      const controlItem = document.createElement('div');
-      controlItem.className = 'cast-control-item';
-
-      const status = document.createElement('span');
-      status.className = 'cast-status';
-      status.id = `cast-status-${i}`;
-      status.textContent = `Screen ${i}: Not linked`;
-
-      const btn = document.createElement('button');
-      btn.className = 'cast-link-btn';
-      btn.textContent = 'Link TV';
-      btn.dataset.screen = i;
-
-      btn.addEventListener('click', async (e) => {
-        const screen = parseInt(e.target.dataset.screen, 10);
-        console.log(`[Cast] Attempting to link screen ${screen}`);
-        
-        try {
-          // Get Cast context
-          if (!castContext && window.cast && cast.framework) {
-            castContext = cast.framework.CastContext.getInstance();
-          }
-          
-          if (!castContext) {
-            alert('Chromecast not ready yet. Please wait a moment and try again.');
-            return;
-          }
-
-          btn.disabled = true;
-          btn.textContent = 'Connecting...';
-
-          const session = await castContext.requestSession();
-          console.log(`[Cast] Session established for screen ${screen}:`, session);
-          
-          castSessions[screen] = session;
-          status.textContent = `Screen ${screen}: ${session.getCastDevice().friendlyName}`;
-          btn.textContent = 'Linked';
-          btn.disabled = true;
-
-          // Send screen identification message
-          try {
-            await session.sendMessage(CAST_CHANNEL, { 
-              type: 'screen', 
-              screen: screen,
-              timestamp: Date.now()
-            });
-            console.log(`[Cast] Screen identification sent for screen ${screen}`);
-          } catch (msgError) {
-            console.error(`[Cast] Failed to send screen message:`, msgError);
-          }
-
-          // Handle session disconnect
-          session.addUpdateListener((isAlive) => {
-            if (!isAlive) {
-              console.log(`[Cast] Session disconnected for screen ${screen}`);
-              castSessions[screen] = null;
-              status.textContent = `Screen ${screen}: Not linked`;
-              btn.textContent = 'Link TV';
-              btn.disabled = false;
-            }
-          });
-
-        } catch (err) {
-          console.error(`[Cast] Failed to establish session for screen ${screen}:`, err);
-          alert(`Failed to connect to Chromecast: ${err.message}`);
-          btn.textContent = 'Link TV';
-          btn.disabled = false;
-        }
-      });
-
-      controlItem.appendChild(status);
-      controlItem.appendChild(btn);
-      castControlsContainer.appendChild(controlItem);
-    }
+// Fetch CastContext lazily when first needed
+function getCastContext() {
+  if (!castContext && window.cast && cast.framework) {
+    castContext = cast.framework.CastContext.getInstance();
   }
+  return castContext;
+}
+const CAST_CHANNEL = 'urn:x-cast:workout.channel';
+const castSessions = {1:null,2:null,3:null,4:null};
+const castControlsContainer = document.getElementById('cast-controls');
 
-  // Make function globally available
-  window.initializeCastControls = initializeCastControls;
 
-  // Send message to Cast receiver
-  function sendToCast(screenNum, message) {
-    if (castSessions[screenNum]) {
+function buildCastControls() {
+  if (!castControlsContainer) return;
+  castControlsContainer.innerHTML = '';
+  for (let i = 1; i <= 4; i++) {
+    const wrap = document.createElement('div');
+    wrap.style.display = 'flex';
+    wrap.style.alignItems = 'center';
+    wrap.style.gap = '6px';
+
+    const status = document.createElement('span');
+    status.id = `cast-status-${i}`;
+    status.textContent = `Screen ${i}: Not linked`;
+
+    const btn = document.createElement('button');
+    btn.className = 'action-btn';
+    btn.textContent = 'Link TV';
+    btn.dataset.screen = i;
+
+    btn.addEventListener('click', async (e) => {
+      const screen = parseInt(e.target.dataset.screen, 10);
+      const ctx = getCastContext();
+      if (!ctx) { alert('Chromecast not ready yet – wait a second.'); return; }
       try {
-        castSessions[screenNum].sendMessage(CAST_CHANNEL, message);
-        console.log(`[Cast] Message sent to screen ${screenNum}:`, message);
-      } catch (error) {
-        console.error(`[Cast] Failed to send message to screen ${screenNum}:`, error);
+        const session = await ctx.requestSession();
+        castSessions[screen] = session;
+        status.textContent = `Screen ${screen}: ${session.getCastDevice().friendlyName}`;
+        session.sendMessage(CAST_CHANNEL, { type: 'screen', screen }).catch(() => {});
+      } catch (err) {
+        console.error('[Cast] requestSession failed', err);
       }
-    }
+    });
+
+    wrap.appendChild(status);
+    wrap.appendChild(btn);
+    castControlsContainer.appendChild(wrap);
   }
+}
+
+buildCastControls();
+
 
   // DOM Views
   const userSelectView = document.getElementById('user-select-view');
@@ -1052,142 +976,104 @@ document.addEventListener('DOMContentLoaded', () => {
     resetBtn.disabled = true;
   }
 
-  function updateScreen(screenNum, exercisesArr) {
-    // Redraw the local preview
-    const screen = document.getElementById(`screen-${screenNum}`);
-    const container = screen.querySelector('.exercises-container');
-    container.innerHTML = '';
+ function updateScreen(screenNum, exercisesArr) {
+  // Redraw the local preview
+  const screen = document.getElementById(`screen-${screenNum}`);
+  const container = screen.querySelector('.exercises-container');
+  container.innerHTML = '';
 
-    if (!exercisesArr.length) {
-      container.textContent = 'No content';
-      // Send clear message to Cast receiver
-      sendToCast(screenNum, { 
-        type: 'exercise',
-        payload: { name: 'Waiting for workout...', duration: 0 }
-      });
-      pushToFirebase(screenNum, { type: 'clear' });
-      return;
-    }
+  if (!exercisesArr.length) {
+    container.textContent = 'No content';
+    pushToFirebase(screenNum, { type: 'clear' });
+    return;
+  }
 
-    exercisesArr.forEach((ex, idx) => {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'exercise-wrapper';
-      wrapper.innerHTML = `
-        <div class="exercise-display">${ex.name}</div>
-        <div class="timer">${formatTime(ex.remaining || ex.duration)}</div>
-        <div class="progress-container">
-          <div class="progress-bar" style="width:0%;"></div>
-        </div>`;
-      container.appendChild(wrapper);
-    });
+  exercisesArr.forEach((ex, idx) => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'exercise-wrapper';
+    wrapper.innerHTML = `
+      <div class="exercise-display">${ex.name}</div>
+      <div class="timer">${formatTime(ex.remaining || ex.duration)}</div>
+      <div class="progress-container">
+        <div class="progress-bar" style="width:0%;"></div>
+      </div>`;
+    container.appendChild(wrapper);
+  });
 
-    // Send to Cast receiver
-    if (exercisesArr.length > 0) {
-      const firstExercise = exercisesArr[0];
-      sendToCast(screenNum, {
-        type: 'exercise',
-        payload: {
-          name: firstExercise.name,
-          duration: firstExercise.duration,
-          reps: firstExercise.reps || null
-        }
-      });
-    }
+  // Broadcast to Firebase with synchronization data
+  const stamp = Date.now();
+  const payload = {
+    type: 'exercise_data',
+    screen: screenNum,
+    exercises: exercisesArr.map(obj => ({
+      type: obj.type,
+      name: obj.name,
+      duration: obj.duration,
+      startsAt: stamp
+    })),
+    timestamp: stamp
+  };
+  
+  pushToFirebase(screenNum, payload);
+}
 
-    // Broadcast to Firebase with synchronization data
-    const stamp = Date.now();
-    const payload = {
-      type: 'exercise_data',
-      screen: screenNum,
-      exercises: exercisesArr.map(obj => ({
-        type: obj.type,
-        name: obj.name,
-        duration: obj.duration,
-        startsAt: stamp
-      })),
-      timestamp: stamp
-    };
+ async function runExerciseRound() {
+  return new Promise(resolve => {
+    let active = [];
+    const startTime = Date.now();
     
-    pushToFirebase(screenNum, payload);
-  }
-
-  async function runExerciseRound() {
-    return new Promise(resolve => {
-      let active = [];
-      const startTime = Date.now();
+    // First update all screens with the exercises
+    for (let i = 1; i <= 4; i++) {
+      const scrExercises = currentWorkout.exercises.filter(ex => 
+        ex.type === 'exercise' && ex.screen === String(i)
+      );
+      updateScreen(i, scrExercises);
       
-      // First update all screens with the exercises and send start signal
-      for (let i = 1; i <= 4; i++) {
-        const scrExercises = currentWorkout.exercises.filter(ex => 
-          ex.type === 'exercise' && ex.screen === String(i)
-        );
-        updateScreen(i, scrExercises);
-
-        // Send 'start' message to receiver
-        sendToCast(i, { type: 'state', payload: 'start' });
-        
-        // Start timers for each exercise on each screen
-        scrExercises.forEach((ex, idx) => {
-          active.push(new Promise(res => {
-            const timerKey = `screen-${i}-${idx}`;
-            let rem = ex.duration;
+      // Start timers for each exercise on each screen
+      scrExercises.forEach((ex, idx) => {
+        active.push(new Promise(res => {
+          const timerKey = `screen-${i}-${idx}`;
+          let rem = ex.duration;
+          
+          const updateTimer = () => {
+            const wrapper = document.querySelector(`#screen-${i} .exercise-wrapper:nth-child(${idx + 1})`);
+            if (!wrapper) return;
             
-            const updateTimer = () => {
-              const wrapper = document.querySelector(`#screen-${i} .exercise-wrapper:nth-child(${idx + 1})`);
-              if (!wrapper) return;
-              
-              const timerEl = wrapper.querySelector('.timer');
-              const progressBar = wrapper.querySelector('.progress-bar');
-              
-              // Calculate remaining time based on start time
-              const elapsed = Math.floor((Date.now() - startTime) / 1000);
-              rem = Math.max(0, ex.duration - elapsed);
-              
-              timerEl.textContent = formatTime(rem);
-              const prog = ((ex.duration - rem) / ex.duration) * 100;
-              progressBar.style.width = prog + '%';
-              
-              // Send progress to Cast receiver
-              sendToCast(i, { type: 'progress', pct: prog });
-              
-              if (rem <= 0) {
-                clearInterval(timers[timerKey]);
-                delete timers[timerKey];
-                res();
-              }
-            };
+            const timerEl = wrapper.querySelector('.timer');
+            const progressBar = wrapper.querySelector('.progress-bar');
             
-            // Initial update
-            updateTimer();
+            // Calculate remaining time based on start time
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            rem = Math.max(0, ex.duration - elapsed);
             
-            // Set interval for updates
-            timers[timerKey] = setInterval(updateTimer, 200);
-          }));
-        });
-      }
-      
-      Promise.all(active).then(() => {
-        // Send stop signal to all Cast receivers
-        for (let i = 1; i <= 4; i++) {
-          sendToCast(i, { type: 'state', payload: 'stop' });
-        }
-        resolve();
+            timerEl.textContent = formatTime(rem);
+            const prog = ((ex.duration - rem) / ex.duration) * 100;
+            progressBar.style.width = prog + '%';
+            
+            if (rem <= 0) {
+              clearInterval(timers[timerKey]);
+              delete timers[timerKey];
+              res();
+            }
+          };
+          
+          // Initial update
+          updateTimer();
+          
+          // Set interval for updates
+          timers[timerKey] = setInterval(updateTimer, 200);
+        }));
       });
-    });
-  }
+    }
+    
+    Promise.all(active).then(() => resolve());
+  });
+}
 
   function runRestPhase() {
     return new Promise(resolve => {
       for (let i = 1; i <= 4; i++) {
         updateScreen(i, [{ name: "Rest", duration: globalRestSettings.duration, remaining: globalRestSettings.duration, type: "rest" }]);
-        
-        // Send rest exercise to Cast receiver
-        sendToCast(i, {
-          type: 'exercise',
-          payload: { name: 'Rest', duration: globalRestSettings.duration }
-        });
-        sendToCast(i, { type: 'state', payload: 'start' });
-        
         let rem = globalRestSettings.duration;
         const wrapper = document.querySelector(`#screen-${i} .exercise-wrapper`);
         if (!wrapper) continue;
@@ -1200,24 +1086,13 @@ document.addEventListener('DOMContentLoaded', () => {
           timerEl.textContent = formatTime(rem);
           let prog = ((globalRestSettings.duration - rem) / globalRestSettings.duration) * 100;
           progressBar.style.width = prog + '%';
-          
-          // Send progress to Cast receiver
-          sendToCast(i, { type: 'progress', pct: prog });
-          
           if (rem <= 0) {
             clearInterval(timers[`screen-${i}-rest`]);
             delete timers[`screen-${i}-rest`];
           }
         }, 1000);
       }
-      
-      setTimeout(() => {
-        // Send stop signal after rest
-        for (let i = 1; i <= 4; i++) {
-          sendToCast(i, { type: 'state', payload: 'stop' });
-        }
-        resolve();
-      }, globalRestSettings.duration * 1000);
+      setTimeout(() => resolve(), globalRestSettings.duration * 1000);
     });
   }
 
@@ -1246,11 +1121,6 @@ document.addEventListener('DOMContentLoaded', () => {
       
       for (let i = 1; i <= 4; i++) {
         document.querySelector(`#screen-${i} .exercises-container`).textContent = 'Workout Complete';
-        // Send completion message to Cast receiver
-        sendToCast(i, {
-          type: 'exercise',
-          payload: { name: 'Workout Complete!', duration: 0 }
-        });
       }
     } catch (error) {
       console.error('Error during workout sequence:', error);
@@ -1268,8 +1138,6 @@ document.addEventListener('DOMContentLoaded', () => {
       for (let i = 1; i <= 4; i++) {
         const scrExercises = currentWorkout.exercises.filter(ex => ex.type === 'exercise' && ex.screen === String(i));
         updateScreen(i, scrExercises);
-        // Send reset/stop signal to Cast receiver
-        sendToCast(i, { type: 'state', payload: 'stop' });
       }
     }
     startBtn.disabled = false;
@@ -1733,13 +1601,6 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('beforeunload', () => {
     clearAllTimers();
   });
-
-  // Initialize cast controls when DOM is ready
-  setTimeout(() => {
-    if (window.cast && cast.framework) {
-      initializeCastControls();
-    }
-  }, 2000);
 });
 </script>
 </body>
