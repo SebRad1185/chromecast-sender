@@ -5,6 +5,29 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Cast bootstrap callback -->
+  <script>
+    window.__onGCastApiAvailable = function(isAvailable) {
+      if (!isAvailable) return console.warn('[Cast] API unavailable');
+      (function initCast() {
+        if (window.cast && cast.framework) {
+          cast.framework.CastContext.getInstance().setOptions({
+            receiverApplicationId: '0656D6B9',
+            autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
+            customNamespaces: {
+              'urn:x-cast:workout.channel': cast.framework.messages.MessageType.JSON
+            }
+          });
+          console.log('[Cast] Initialized');
+        } else {
+          setTimeout(initCast, 100);
+        }
+      })();
+    };
+  </script>
+  <!-- Load Cast SDK with CAF support -->
+  <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Workout Timer</title>
@@ -14,18 +37,19 @@
 <!-- Cast sender SDK + framework -->
 
 <!-- Cast Sender bootstrap (declared BEFORE SDK is fetched) -->
+<script src="https://www.gstatic.com/cast/sdk/libs/caf_sender/v3/cast_sender_framework.js"></script>
 <script>
   window.__onGCastApiAvailable = (isAvailable) => {
     if (!isAvailable) return console.warn('Cast API unavailable');
     const init = () => {
       if (window.cast && cast.framework) {
         cast.framework.CastContext.getInstance().setOptions({
-  receiverApplicationId: '0656D6B9',  // your App ID
-  autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
-  customNamespaces: {
-    'urn:x-cast:workout.channel': cast.framework.CastMessageFormat.JSON
-  }
-});
+          receiverApplicationId: '0656D6B9',
+          autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
+          customNamespaces: {
+            'urn:x-cast:workout.channel': cast.framework.CastMessageFormat.JSON
+          }
+        });
         console.log('CAF v3 sender initialized');
       } else {
         setTimeout(init, 100);
@@ -34,8 +58,6 @@
     init();
   };
 </script>
-<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
-
 
 
 <script type="module">
