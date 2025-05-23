@@ -1536,10 +1536,13 @@ const CAST_CHANNEL = 'urn:x-cast:workout.channel';
   });
 
   startBtn.addEventListener('click', startFullSequence);
-  const pauseBtn = document.getElementById('pause-btn');
+  let isPaused = false;
   pauseBtn.addEventListener('click', () => {
+    isPaused = !isPaused;
+    const state = isPaused ? 'pause' : 'resume';
+    pauseBtn.textContent = isPaused ? 'Resume' : 'Pause';
     for (let i = 1; i <= 4; i++) {
-      sendToCast(i, { type: 'state', payload: 'pause' });
+      sendToCast(i, { type: 'state', payload: state });
     }
   });
 
