@@ -733,7 +733,11 @@ document.addEventListener('DOMContentLoaded', () => {
           console.log(`[Cast] Session established for screen ${screen}:`, session);
           
           castSessions[screen] = session;
-          status.textContent = `Screen ${screen}: ${session.getCastDevice().friendlyName}`;
+          if (session && session.getCastDevice) {
+            status.textContent = `Screen ${screen}: ${session.getCastDevice().friendlyName}`;
+          } else {
+            status.textContent = `Screen ${screen}: Linked`;
+          }
           btn.textContent = 'Linked';
           btn.disabled = true;
 
