@@ -1050,7 +1050,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateScreen(i, scrExercises);
 
         // Send 'start' message to receiver
-        sendToCast(i, { type: 'state', payload: 'start' });
+        sendToCast(i, { type: 'command', action: 'start' });
         
         // Start timers for each exercise on each screen
         scrExercises.forEach((ex, idx) => {
@@ -1095,7 +1095,7 @@ document.addEventListener('DOMContentLoaded', () => {
       Promise.all(active).then(() => {
         // Send stop signal to all Cast receivers
         for (let i = 1; i <= 4; i++) {
-          sendToCast(i, { type: 'state', payload: 'stop' });
+          sendToCast(i, { type: 'command', action: 'reset' });
         }
         resolve();
       });
@@ -1112,7 +1112,7 @@ document.addEventListener('DOMContentLoaded', () => {
           type: 'exercise',
           payload: { name: 'Rest', duration: globalRestSettings.duration }
         });
-        sendToCast(i, { type: 'state', payload: 'start' });
+        sendToCast(i, { type: 'command', action: 'start' });
         
         let rem = globalRestSettings.duration;
         const wrapper = document.querySelector(`#screen-${i} .exercise-wrapper`);
@@ -1140,7 +1140,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
         // Send stop signal after rest
         for (let i = 1; i <= 4; i++) {
-          sendToCast(i, { type: 'state', payload: 'stop' });
+          sendToCast(i, { type: 'command', action: 'reset' });
         }
         resolve();
       }, globalRestSettings.duration * 1000);
@@ -1195,7 +1195,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const scrExercises = currentWorkout.exercises.filter(ex => ex.type === 'exercise' && ex.screen === String(i));
         updateScreen(i, scrExercises);
         // Send reset/stop signal to Cast receiver
-        sendToCast(i, { type: 'state', payload: 'stop' });
+        sendToCast(i, { type: 'command', action: 'reset' });
       }
     }
     startBtn.disabled = false;
