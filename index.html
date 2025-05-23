@@ -8,25 +8,48 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&amp;display=swap" rel="stylesheet"/>
 <!-- Low-level Cast Sender API -->
-<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
-
-<script>
-  window['__onGCastApiAvailable'] = function(isAvailable) {
-    if (!isAvailable) return;
-    const context = cast.framework.CastContext.getInstance();
-    context.setOptions({
-      receiverApplicationId: '0656D6B9',
-      autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
-    });
-    console.log('[Cast] CastContext initialized');
-  };
-</script>
-
+<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=0"></script>
 <script>
   const CAST_CHANNEL = 'urn:x-cast:workout.channel';
   const sessions = {};
-  
- 
+  window['__onGCastApiAvailable'] = function(isAvailable) {
+    console.log('[Cast] API available =', isAvailable);
+    if (!isAvailable) {
+      console.warn('[Cast] Chromecast API not available');
+      return;
+    }
+    const request = new chrome.cast.SessionRequest('0656D6B9');
+    const config = new chrome.cast.ApiConfig(
+      request,
+      session => { console.log('[Cast] Session listener:', session); },
+      availability => { console.log('[Cast] Receiver availability:', availability); }
+    );
+    chrome.cast.initialize(config, () => console.log('[Cast] Initialized'), console.error);
+  };
+
+  function linkScreen(screenNum) {
+    chrome.cast.requestSession(
+      session => {
+        sessions[screenNum] = session;
+      castSessions[screenNum] = session;
+        session.sendMessage(CAST_CHANNEL, { type: 'screen', screen: screenNum })
+          .then(() => console.log('[Cast] Screen ID sent'))
+          .catch(err => console.error('[Cast] Failed to send Screen ID:', err));
+      },
+      err => {
+        console.error(`[Cast] Failed to link screen ${screenNum}:`, err);
+        alert(`Link to screen ${screenNum} failed: ${err.message}`);
+      }
+    );
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Replace with your cast button IDs
+    ['1', '2', '3', '4'].forEach(i => {
+      const btn = document.getElementById(`cast-btn-${i}`);
+      if (btn) btn.addEventListener('click', () => linkScreen(i));
+    });
+  });
 </script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
@@ -460,9 +483,6 @@
       color: #fff;
     }
 </style>
-
-
-
 </head>
 <body>
 <!-- USER-SELECT VIEW -->
@@ -1031,7 +1051,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateScreen(i, scrExercises);
 
         // Send 'start' message to receiver
-        sendToCast(i, { type: 'command', action: 'start' });
+        sendToCast(i, { type: 'state', payload: 'start' });
         
         // Start timers for each exercise on each screen
         scrExercises.forEach((ex, idx) => {
@@ -1076,7 +1096,7 @@ document.addEventListener('DOMContentLoaded', () => {
       Promise.all(active).then(() => {
         // Send stop signal to all Cast receivers
         for (let i = 1; i <= 4; i++) {
-          sendToCast(i, { type: 'command', action: 'reset' });
+          sendToCast(i, { type: 'state', payload: 'stop' });
         }
         resolve();
       });
@@ -1093,7 +1113,7 @@ document.addEventListener('DOMContentLoaded', () => {
           type: 'exercise',
           payload: { name: 'Rest', duration: globalRestSettings.duration }
         });
-        sendToCast(i, { type: 'command', action: 'start' });
+        sendToCast(i, { type: 'state', payload: 'start' });
         
         let rem = globalRestSettings.duration;
         const wrapper = document.querySelector(`#screen-${i} .exercise-wrapper`);
@@ -1121,7 +1141,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
         // Send stop signal after rest
         for (let i = 1; i <= 4; i++) {
-          sendToCast(i, { type: 'command', action: 'reset' });
+          sendToCast(i, { type: 'state', payload: 'stop' });
         }
         resolve();
       }, globalRestSettings.duration * 1000);
@@ -1176,7 +1196,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const scrExercises = currentWorkout.exercises.filter(ex => ex.type === 'exercise' && ex.screen === String(i));
         updateScreen(i, scrExercises);
         // Send reset/stop signal to Cast receiver
-        sendToCast(i, { type: 'command', action: 'reset' });
+        sendToCast(i, { type: 'state', payload: 'stop' });
       }
     }
     startBtn.disabled = false;
@@ -1649,20 +1669,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 2000);
 });
 </script>
-<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
-
-<script>
-  window['__onGCastApiAvailable'] = function(isAvailable) {
-    if (!isAvailable) return;
-    const context = cast.framework.CastContext.getInstance();
-    context.setOptions({
-      receiverApplicationId: '0656D6B9',
-      autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
-    });
-    console.log('[Cast] CastContext initialized');
-  };
-</script>
-<script>
+<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=0"></script><script>
 document.addEventListener('DOMContentLoaded', () => {
   [1, 2, 3, 4].forEach(i => {
     const btn = document.getElementById('link-' + i);
