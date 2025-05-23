@@ -715,6 +715,10 @@ document.addEventListener('DOMContentLoaded', () => {
           // Get Cast context
           if (!castContext && window.cast && cast.framework) {
             castContext = cast.framework.CastContext.getInstance();
+          castContext.setOptions({
+            receiverApplicationId: '0656D6B9',
+            autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+          });
           }
           
           if (!castContext) {
