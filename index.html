@@ -10,6 +10,7 @@
 <!-- Low-level Cast Sender API -->
 
 <script>
+const castSessions = { 1: null, 2: null, 3: null, 4: null };
   const CAST_CHANNEL = 'urn:x-cast:workout.channel';
   const sessions = {};
   window['__onGCastApiAvailable'] = function(isAvailable) {
@@ -681,8 +682,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Cast API variables
   let castContext = null;
-  const CAST_CHANNEL = 'urn:x-cast:workout.channel';
-  const castSessions = {1: null, 2: null, 3: null, 4: null};
+const CAST_CHANNEL = 'urn:x-cast:workout.channel';
   const castControlsContainer = document.getElementById('cast-controls');
 
   // Initialize Cast controls
