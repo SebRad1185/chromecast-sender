@@ -669,6 +669,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let workouts = [];
   let currentWorkout = null;
   let timers = {};
+  let isPaused = false;
   let exerciseCount = 1;
   let editingWorkoutId = null;
   let savedExercises = [];
@@ -1061,30 +1062,33 @@ const CAST_CHANNEL = 'urn:x-cast:workout.channel';
             const timerKey = `screen-${i}-${idx}`;
             let rem = ex.duration;
             
+            
+            let start = Date.now();
             const updateTimer = () => {
+              if (isPaused) return;
               const wrapper = document.querySelector(`#screen-${i} .exercise-wrapper:nth-child(${idx + 1})`);
               if (!wrapper) return;
-              
+
+              const now = Date.now();
+              const elapsed = Math.floor((now - start) / 1000);
+              rem = Math.max(0, ex.duration - elapsed);
+
               const timerEl = wrapper.querySelector('.timer');
               const progressBar = wrapper.querySelector('.progress-bar');
-              
-              // Calculate remaining time based on start time
-              const elapsed = Math.floor((Date.now() - startTime) / 1000);
-              rem = Math.max(0, ex.duration - elapsed);
-              
+
               timerEl.textContent = formatTime(rem);
               const prog = ((ex.duration - rem) / ex.duration) * 100;
               progressBar.style.width = prog + '%';
-              
-              // Send progress to Cast receiver
+
               sendToCast(i, { type: 'progress', pct: prog });
-              
+
               if (rem <= 0) {
                 clearInterval(timers[timerKey]);
                 delete timers[timerKey];
                 res();
               }
             };
+
             
             // Initial update
             updateTimer();
@@ -1537,7 +1541,16 @@ const CAST_CHANNEL = 'urn:x-cast:workout.channel';
   });
 
   startBtn.addEventListener('click', startFullSequence);
-  let isPaused = false;
+
+  pauseBtn.addEventListener('click', () => {
+    isPaused = !isPaused;
+    pauseBtn.textContent = isPaused ? 'Resume' : 'Pause';
+    for (let i = 1; i <= 4; i++) {
+      sendToCast(i, { type: 'state', payload: isPaused ? 'pause' : 'resume' });
+    }
+  });
+
+  
   pauseBtn.addEventListener('click', () => {
     isPaused = !isPaused;
     const state = isPaused ? 'pause' : 'resume';
