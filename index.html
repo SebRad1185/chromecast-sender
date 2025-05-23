@@ -684,98 +684,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const castControlsContainer = document.getElementById('cast-controls');
 
   // Initialize Cast controls
-  /*function initializeCastControls() {
-    console.log('[Cast] Initializing cast controls');
-    if (!castControlsContainer) return;
-    
-    castControlsContainer.innerHTML = '';
-    for (let i = 1; i <= 4; i++) {
-      const controlItem = document.createElement('div');
-      controlItem.className = 'cast-control-item';
-
-      const status = document.createElement('span');
-      status.className = 'cast-status';
-      status.id = `cast-status-${i}`;
-      status.textContent = `Screen ${i}: Not linked`;
-
-      const btn = document.createElement('button');
-      btn.className = 'cast-link-btn';
-      btn.textContent = 'Link TV';
-      btn.dataset.screen = i;
-
-      btn.addEventListener('click', async (e) => {
-        const screen = parseInt(e.target.dataset.screen, 10);
-        console.log(`[Cast] Attempting to link screen ${screen}`);
-        
-        try {
-          // Get Cast context
-          if (!castContext && window.cast && cast.framework) {
-            castContext = cast.framework.CastContext.getInstance();
-          castContext.setOptions({
-            receiverApplicationId: '0656D6B9',
-            autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
-          });
-          }
-          
-          if (!castContext) {
-            alert('Chromecast not ready yet. Please wait a moment and try again.');
-            return;
-          }
-
-          btn.disabled = true;
-          btn.textContent = 'Connecting...';
-
-          const session = await castContext.requestSession();
-          console.log(`[Cast] Session established for screen ${screen}:`, session);
-          
-          castSessions[screen] = session;
-          if (session && session.getCastDevice) {
-            status.textContent = `Screen ${screen}: ${session.getCastDevice().friendlyName}`;
-          } else {
-            status.textContent = `Screen ${screen}: Linked`;
-          }
-          btn.textContent = 'Linked';
-          btn.disabled = true;
-
-          // Send screen identification message
-          try {
-            await session.sendMessage(CAST_CHANNEL, { 
-              type: 'screen', 
-              screen: screen,
-              timestamp: Date.now()
-            });
-            console.log(`[Cast] Screen identification sent for screen ${screen}`);
-          } catch (msgError) {
-            console.error(`[Cast] Failed to send screen message:`, msgError);
-          }
-
-          // Handle session disconnect
-          session.addUpdateListener((isAlive) => {
-            if (!isAlive) {
-              console.log(`[Cast] Session disconnected for screen ${screen}`);
-              castSessions[screen] = null;
-              status.textContent = `Screen ${screen}: Not linked`;
-              btn.textContent = 'Link TV';
-              btn.disabled = false;
-            }
-          });
-
-        } catch (err) {
-          console.error(`[Cast] Failed to establish session for screen ${screen}:`, err);
-          alert(`Failed to connect to Chromecast: ${err.message}`);
-          btn.textContent = 'Link TV';
-          btn.disabled = false;
-        }
-      });
-
-      controlItem.appendChild(status);
-      controlItem.appendChild(btn);
-      castControlsContainer.appendChild(controlItem);
-    }
-  } */
-
-  // Make function globally available
-  window.initializeCastControls = initializeCastControls;
+  
 
   // Send message to Cast receiver
   function sendToCast(screenNum, message) {
@@ -1754,10 +1663,20 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize cast controls when DOM is ready
   setTimeout(() => {
     if (window.cast && cast.framework) {
-      initializeCastControls();
+      
     }
   }, 2000);
 });
 </script>
-<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=0"></script></body>
+<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=0"></script><script>
+document.addEventListener('DOMContentLoaded', () => {
+  [1, 2, 3, 4].forEach(i => {
+    const btn = document.getElementById('link-' + i);
+    if (btn) {
+      btn.addEventListener('click', () => linkScreen(i));
+    }
+  });
+});
+</script>
+</body>
 </html>
