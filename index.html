@@ -1536,6 +1536,13 @@ const CAST_CHANNEL = 'urn:x-cast:workout.channel';
   });
 
   startBtn.addEventListener('click', startFullSequence);
+  const pauseBtn = document.getElementById('pause-btn');
+  pauseBtn.addEventListener('click', () => {
+    for (let i = 1; i <= 4; i++) {
+      sendToCast(i, { type: 'state', payload: 'pause' });
+    }
+  });
+
   resetBtn.addEventListener('click', resetTimer);
 
   // Modal step navigation
