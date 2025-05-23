@@ -8,7 +8,54 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"/>
 
 <!-- Low-level Cast Sender API -->
-<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=0"></script>
+<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=0">
+    
+   
+
+    pauseBtn?.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'pause' });
+    });
+
+    resetBtn?.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'reset' });
+    });
+
+
+    
+   
+
+    if (pauseBtn) pauseBtn.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'pause' });
+    });
+
+    if (resetBtn) resetBtn.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'reset' });
+    });
+
+
+    function broadcastToScreens(message) {
+      for (let screen = 1; screen <= 4; screen++) {
+        if (castSessions[screen]) {
+          castSessions[screen].sendMessage(CAST_CHANNEL, message)
+            .then(() => console.log(`[Cast] Sent to screen ${screen}:`, message))
+            .catch(err => console.error(`[Cast] Failed for screen ${screen}:`, err));
+        }
+      }
+    }
+
+    document.getElementById('start-btn')?.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'start' });
+    });
+
+    document.getElementById('pause-btn')?.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'pause' });
+    });
+
+    document.getElementById('reset-btn')?.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'reset' });
+    });
+
+</script>
 <script>
   const CAST_CHANNEL = 'urn:x-cast:workout.channel';
   const sessions = {};
@@ -49,6 +96,53 @@
       if (btn) btn.addEventListener('click', () => linkScreen(i));
     });
   });
+
+    
+  
+
+    pauseBtn?.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'pause' });
+    });
+
+    resetBtn?.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'reset' });
+    });
+
+
+    
+ 
+
+    if (pauseBtn) pauseBtn.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'pause' });
+    });
+
+    if (resetBtn) resetBtn.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'reset' });
+    });
+
+
+    function broadcastToScreens(message) {
+      for (let screen = 1; screen <= 4; screen++) {
+        if (castSessions[screen]) {
+          castSessions[screen].sendMessage(CAST_CHANNEL, message)
+            .then(() => console.log(`[Cast] Sent to screen ${screen}:`, message))
+            .catch(err => console.error(`[Cast] Failed for screen ${screen}:`, err));
+        }
+      }
+    }
+
+    document.getElementById('start-btn')?.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'start' });
+    });
+
+    document.getElementById('pause-btn')?.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'pause' });
+    });
+
+    document.getElementById('reset-btn')?.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'reset' });
+    });
+
 </script>
 
 
@@ -92,6 +186,53 @@
       .catch((error) => console.error(`[Firebase] Push failed for screen-${screenNum}:`, error));
   }
   window.pushToFirebase = pushToFirebase;
+
+    
+    
+
+    pauseBtn?.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'pause' });
+    });
+
+    resetBtn?.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'reset' });
+    });
+
+
+    
+ 
+
+    if (pauseBtn) pauseBtn.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'pause' });
+    });
+
+    if (resetBtn) resetBtn.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'reset' });
+    });
+
+
+    function broadcastToScreens(message) {
+      for (let screen = 1; screen <= 4; screen++) {
+        if (castSessions[screen]) {
+          castSessions[screen].sendMessage(CAST_CHANNEL, message)
+            .then(() => console.log(`[Cast] Sent to screen ${screen}:`, message))
+            .catch(err => console.error(`[Cast] Failed for screen ${screen}:`, err));
+        }
+      }
+    }
+
+    document.getElementById('start-btn')?.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'start' });
+    });
+
+    document.getElementById('pause-btn')?.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'pause' });
+    });
+
+    document.getElementById('reset-btn')?.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'reset' });
+    });
+
 </script>
 
 <style>
@@ -808,8 +949,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const showExercisesBtn = document.getElementById('show-exercises-btn');
   const backToHomeBtn = document.getElementById('back-to-home-btn');
   const backBtn = document.getElementById('back-btn');
-  const startBtn = document.getElementById('start-btn');
-  const resetBtn = document.getElementById('reset-btn');
   const workoutModal = document.getElementById('workout-modal');
   const closeModalBtn = document.getElementById('close-modal');
   const cancelWorkoutBtn = document.getElementById('cancel-workout');
@@ -1762,6 +1901,87 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }, 2000);
 });
+
+    
+
+
+    pauseBtn?.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'pause' });
+    });
+
+    resetBtn?.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'reset' });
+    });
+
+
+    
+   
+
+    if (pauseBtn) pauseBtn.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'pause' });
+    });
+
+    if (resetBtn) resetBtn.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'reset' });
+    });
+
+
+    function broadcastToScreens(message) {
+      for (let screen = 1; screen <= 4; screen++) {
+        if (castSessions[screen]) {
+          castSessions[screen].sendMessage(CAST_CHANNEL, message)
+            .then(() => console.log(`[Cast] Sent to screen ${screen}:`, message))
+            .catch(err => console.error(`[Cast] Failed for screen ${screen}:`, err));
+        }
+      }
+    }
+
+    document.getElementById('start-btn')?.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'start' });
+    });
+
+    document.getElementById('pause-btn')?.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'pause' });
+    });
+
+    document.getElementById('reset-btn')?.addEventListener('click', () => {
+      broadcastToScreens({ type: 'command', action: 'reset' });
+    });
+
 </script>
+
+<div style="margin-top: 20px;">
+  <button id="start-btn">Start Workout</button>
+  <button id="pause-btn">Pause Workout</button>
+  <button id="reset-btn">Reset Workout</button>
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  function broadcastToScreens(message) {
+    for (let screen = 1; screen <= 4; screen++) {
+      if (castSessions[screen]) {
+        castSessions[screen].sendMessage(CAST_CHANNEL, message)
+          .then(() => console.log(`[Cast] Sent to screen ${screen}:`, message))
+          .catch(err => console.error(`[Cast] Failed for screen ${screen}:`, err));
+      }
+    }
+  }
+
+  document.getElementById('start-btn')?.addEventListener('click', () => {
+    broadcastToScreens({ type: 'command', action: 'start' });
+  });
+
+  document.getElementById('pause-btn')?.addEventListener('click', () => {
+    broadcastToScreens({ type: 'command', action: 'pause' });
+  });
+
+  document.getElementById('reset-btn')?.addEventListener('click', () => {
+    broadcastToScreens({ type: 'command', action: 'reset' });
+  });
+});
+</script>
+
 </body>
 </html>
