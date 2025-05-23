@@ -19,7 +19,11 @@
       return;
     }
     const request = new chrome.cast.SessionRequest('0656D6B9');
-    const config = new chrome.cast.ApiConfig(request, null, null);
+    const config = new chrome.cast.ApiConfig(
+      request,
+      session => { console.log('[Cast] Session listener:', session); },
+      receiver => { console.log('[Cast] Receiver availability:', receiver && receiver.isAvailable); }
+    );
     chrome.cast.initialize(config, () => console.log('[Cast] Initialized'), console.error);
   };
 
