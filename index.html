@@ -27,22 +27,22 @@
     chrome.cast.initialize(config, () => console.log('[Cast] Initialized'), console.error);
   };
 
-  function linkScreen(screenNum) {
-    chrome.cast.requestSession(
-      session => {
-        sessions[screenNum] = session;
-      castSessions[screenNum] = session;
-        session.sendMessage(CAST_CHANNEL, { type: 'screen', screen: screenNum })
-          .then(() => console.log('[Cast] Screen ID sent'))
-          .catch(err => console.error('[Cast] Failed to send Screen ID:', err));
-      },
-      err => {
-        console.error(`[Cast] Failed to link screen ${screenNum}:`, err);
-        alert(`Link to screen ${screenNum} failed: ${err.message}`);
-      }
-    );
-  }
+function linkScreen(screenNum) {
+  chrome.cast.requestSession(
+    session => {
+      sessions[screenNum] = session;
+      castSessions[screenNum] = session;  // <-- Add this line
 
+      session.sendMessage(CAST_CHANNEL, { type: 'screen', screen: screenNum })
+        .then(() => console.log('[Cast] Screen ID sent'))
+        .catch(err => console.error('[Cast] Failed to send Screen ID:', err));
+    },
+    err => {
+      console.error(`[Cast] Failed to link screen ${screenNum}:`, err);
+      alert(`Link to screen ${screenNum} failed: ${err.message}`);
+    }
+  );
+}
   document.addEventListener('DOMContentLoaded', () => {
     // Replace with your cast button IDs
     ['1', '2', '3', '4'].forEach(i => {
