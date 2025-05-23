@@ -1,82 +1,55 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Workout Timer</title>
 <!-- Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"/>
-
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&amp;display=swap" rel="stylesheet"/>
 <!-- Low-level Cast Sender API -->
 <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=0"></script>
-  <!-- Cast Linking and Message Sending -->
-  <script>
-    const APP_ID = '0656D6B9';
-    const NAMESPACE = 'urn:x-cast:workout.channel';
-
-    // Initialize Cast API
-    window['__onGCastApiAvailable'] = isAvailable => {
-      console.log('[Cast] API available =', isAvailable);
-      if (!isAvailable) return;
-      const request = new chrome.cast.SessionRequest(APP_ID);
-      const config = new chrome.cast.ApiConfig(
-        request,
-        session => console.log('[Cast] session listener', session),
-        availability => console.log('[Cast] receiver availability', availability)
-      );
-      chrome.cast.initialize(config,
-        () => console.log('[Cast] Initialized'),
-        err => console.error('[Cast] init error', err)
-      );
-    };
-
-    // Store sessions for each screen
-    window.castSessions = {};
-
-    // Link a TV screen
-    function linkTV(screenNum) {
-      chrome.cast.requestSession(
-        session => {
-          window.castSessions[screenNum] = session;
-          const btn = document.getElementById(`link-${screenNum}`);
-          btn.textContent = 'Linked'; btn.disabled = true;
-          console.log(`[Cast] Linked screen ${screenNum}`, session);
-        },
-        err => {
-          console.error(`[Cast] Link error for ${screenNum}:`, err);
-          alert(`Link failed for screen ${screenNum}: ${err.message}`);
-        }
-      );
+<script>
+  const CAST_CHANNEL = 'urn:x-cast:workout.channel';
+  const sessions = {};
+  window['__onGCastApiAvailable'] = function(isAvailable) {
+    console.log('[Cast] API available =', isAvailable);
+    if (!isAvailable) {
+      console.warn('[Cast] Chromecast API not available');
+      return;
     }
+    const request = new chrome.cast.SessionRequest('0656D6B9');
+    const config = new chrome.cast.ApiConfig(
+      request,
+      session => { console.log('[Cast] Session listener:', session); },
+      availability => { console.log('[Cast] Receiver availability:', availability); }
+    );
+    chrome.cast.initialize(config, () => console.log('[Cast] Initialized'), console.error);
+  };
 
-    // Attach link button listeners and build controls
-    document.addEventListener('DOMContentLoaded', () => {
-      const container = document.getElementById('cast-controls');
-      container.innerHTML = '';
-      for (let i = 1; i <= 4; i++) {
-        const btn = document.createElement('button');
-        btn.id = `link-${i}`;
-        btn.className = 'action-btn cast-link-btn';
-        btn.textContent = `Link TV ${i}`;
-        btn.addEventListener('click', () => linkTV(i));
-        container.appendChild(btn);
+  function linkScreen(screenNum) {
+    chrome.cast.requestSession(
+      session => {
+        sessions[screenNum] = session;
+        session.sendMessage(CAST_CHANNEL, { type: 'screen', screen: screenNum })
+          .then(() => console.log('[Cast] Screen ID sent'))
+          .catch(err => console.error('[Cast] Failed to send Screen ID:', err));
+      },
+      err => {
+        console.error(`[Cast] Failed to link screen ${screenNum}:`, err);
+        alert(`Link to screen ${screenNum} failed: ${err.message}`);
       }
+    );
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Replace with your cast button IDs
+    ['1', '2', '3', '4'].forEach(i => {
+      const btn = document.getElementById(`cast-btn-${i}`);
+      if (btn) btn.addEventListener('click', () => linkScreen(i));
     });
-
-    // Override sendToCast to use our castSessions
-    window.sendToCast = (screenNum, message) => {
-      const session = window.castSessions[screenNum];
-      if (!session) {
-        console.warn(`[Cast] No session for screen ${screenNum}`);
-        return;
-      }
-      session.sendMessage(NAMESPACE, message)
-        .then(() => console.log(`[Cast] Msg sent to ${screenNum}:`, message))
-        .catch(e => console.error(`[Cast] Send error to ${screenNum}:`, e));
-    };
-  </script>
-
-
+  });
+</script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
   import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-database.js";
@@ -118,7 +91,6 @@
   }
   window.pushToFirebase = pushToFirebase;
 </script>
-
 <style>
     * { box-sizing: border-box; }
     body {
@@ -512,183 +484,182 @@
 </style>
 </head>
 <body>
-  <!-- USER-SELECT VIEW -->
-  <div class="container" id="user-select-view">
-    <header><h1>Select User</h1></header>
-    <div id="user-list-container" class="user-options"></div>
-    <div class="add-user-form">
-      <input type="text" id="new-user-name" placeholder="Enter user name">
-      <button class="action-btn" id="add-user-btn">Add User</button>
-    </div>
-  </div>
-
-  <!-- WORKOUT-LIST VIEW -->
-  <div class="container" id="workout-list-view">
-    <header>
-      <h1>Workout Timer</h1>
-      <div>
-        <span class="user-info">User: <span id="current-user-name">None</span></span>
-        <button id="switch-user-btn">Switch User</button>
-      </div>
-      <!-- Cast button lives here -->
-      <div id="cast-button-container">
-        <google-cast-launcher></google-cast-launcher>
-      </div>
-    </header>
-    <div class="home-buttons">
-      <button class="create-workout-btn action-btn" id="create-workout-btn">Create New Workout</button>
-      <button class="show-exercises-btn action-btn" id="show-exercises-btn">Show Exercises</button>
-    </div>
-    <hr>
-    <div class="workout-list" id="workout-list"></div>
-  </div>
-  
-  <div class="container" id="exercises-list-view">
-    <header>
-      <h1>Saved Exercises</h1>
-    </header>
-    <div id="exercises-list-container"></div>
-    <button id="back-to-home-btn" class="back-btn action-btn">Back to Home</button>
-  </div>
-  
-  <div class="container timer-view" id="timer-view">
-    <button class="back-btn action-btn" id="back-btn">← Back to Workouts</button>
-    <!-- Cast controls for each screen -->
-    <div id="cast-controls" class="cast-controls"></div>
-    <div class="screen-container">
-      <div class="screen" id="screen-1">
-        <h3>Screen 1</h3>
-        <div class="exercises-container"></div>
-      </div>
-      <div class="screen" id="screen-2">
-        <h3>Screen 2</h3>
-        <div class="exercises-container"></div>
-      </div>
-      <div class="screen" id="screen-3">
-        <h3>Screen 3</h3>
-        <div class="exercises-container"></div>
-      </div>
-      <div class="screen" id="screen-4">
-        <h3>Screen 4</h3>
-        <button class="toggle-mode-btn action-btn" data-screen="4">Switch to Time Display</button>
-        <div class="exercises-container"></div>
-      </div>
-    </div>
-    <div class="home-buttons">
-      <button class="start-btn action-btn" id="start-btn">Start Workout</button>
-      <button class="reset-btn action-btn" id="reset-btn" disabled>Reset</button>
-    </div>
-  </div>
-
-  <!-- Workout Modal (Multi-Step Process) -->
-  <div class="modal" id="workout-modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <div class="modal-title">Create New Workout</div>
-        <button class="close-btn" id="close-modal">×</button>
-      </div>
-      <!-- Step 1: Basic Workout Info -->
-      <div class="modal-step" id="step-1">
-        <div class="input-group">
-          <label for="workout-name">Workout Name</label>
-          <input id="workout-name" placeholder="e.g., Full Body Routine" type="text"/>
-        </div>
-        <div class="input-group">
-          <label for="workout-description">Description (optional)</label>
-          <textarea id="workout-description" placeholder="Describe your workout" rows="3"></textarea>
-        </div>
-      </div>
-      <!-- Step 2: Add Exercises -->
-      <div class="modal-step" id="step-2">
-        <!-- Saved exercise selector -->
-        <div class="input-group" style="margin-bottom: 15px;">
-          <label for="saved-exercise-select">Choose saved exercise</label>
-          <div style="display:flex;gap:10px;">
-            <select id="saved-exercise-select" style="flex:2;">
-              <option value="">-- Select saved exercise --</option>
-            </select>
-            <button class="action-btn" id="add-saved-exercise-btn" style="flex:1;" type="button">Add</button>
-          </div>
-        </div>
-        
-        <div id="exercise-fields">
-          <div class="input-group exercise-field">
-            <label>Exercise 1</label>
-            <div style="display: flex; gap: 10px;">
-              <input class="exercise-name" placeholder="Exercise name" style="flex: 2;" type="text"/>
-              <input class="exercise-duration" min="1" placeholder="Duration (sec)" style="flex: 1;" type="number" value="30"/>
-              <select class="exercise-screen" style="flex: 1;">
-                <option value="1">Screen 1</option>
-                <option value="2">Screen 2</option>
-                <option value="3">Screen 3</option>
-                <option value="4">Screen 4</option>
-              </select>
-              <button class="action-btn save-exercise-template-btn" style="margin-left:10px;">Save</button>
-            </div>
-          </div>
-        </div>
-        <div style="margin-top: 15px;">
-          <button class="action-btn" id="add-exercise-btn">+ Add Exercise</button>
-        </div>
-      </div>
-      
-      <div class="modal-step" id="step-3">
-        <div class="input-group">
-          <label for="restDurationInput">Rest Duration (sec)</label>
-          <input id="restDurationInput" min="1" type="number" value="15"/>
-        </div>
-        <div class="input-group">
-          <label for="restCountInput">Number of Rests</label>
-          <input id="restCountInput" min="1" type="number" value="1"/>
-        </div>
-        <p style="font-size: 0.9em; color: #7f8c8d;">Configure the rest periods between your exercises.</p>
-      </div>
-      
-      <div class="modal-step" id="step-4">
-        <h3>Review Your Workout</h3>
-        <div id="workout-overview"></div>
-      </div>
-      
-      <div class="modal-actions">
-        <button class="action-btn cancel-btn" id="cancel-workout">Cancel</button>
-        <button class="action-btn" id="back-step" style="display:none;">Back</button>
-        <button class="action-btn" id="next-step">Next</button>
-        <button class="action-btn save-btn" id="confirm-workout" style="display:none;">Confirm Workout</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Exercise Edit Modal -->
-  <div class="modal" id="exercise-modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <div class="modal-title">Edit Exercise</div>
-        <button class="close-btn" id="close-exercise-modal">×</button>
-      </div>
-      <div class="input-group">
-        <label for="edit-exercise-name">Exercise Name</label>
-        <input id="edit-exercise-name" placeholder="Exercise name" type="text"/>
-      </div>
-      <div class="input-group">
-        <label for="edit-exercise-duration">Duration (sec)</label>
-        <input id="edit-exercise-duration" min="1" type="number" value="30"/>
-      </div>
-      <div class="input-group">
-        <label for="edit-exercise-screen">Screen</label>
-        <select id="edit-exercise-screen">
-          <option value="1">Screen 1</option>
-          <option value="2">Screen 2</option>
-          <option value="3">Screen 3</option>
-          <option value="4">Screen 4</option>
-        </select>
-      </div>
-      <div class="modal-actions">
-        <button class="action-btn cancel-btn" id="cancel-edit-exercise">Cancel</button>
-        <button class="action-btn save-btn" id="save-edit-exercise">Save Exercise</button>
-      </div>
-    </div>
-  </div>
-
+<!-- USER-SELECT VIEW -->
+<div class="container" id="user-select-view">
+<header><h1>Select User</h1></header>
+<div class="user-options" id="user-list-container"></div>
+<div class="add-user-form">
+<input id="new-user-name" placeholder="Enter user name" type="text"/>
+<button class="action-btn" id="add-user-btn">Add User</button>
+</div>
+</div>
+<!-- WORKOUT-LIST VIEW -->
+<div class="container" id="workout-list-view">
+<header>
+<h1>Workout Timer</h1>
+<div>
+<span class="user-info">User: <span id="current-user-name">None</span></span>
+<button id="switch-user-btn">Switch User</button>
+</div>
+<!-- Cast button lives here -->
+<div id="cast-button-container">
+<google-cast-launcher></google-cast-launcher>
+</div>
+</header>
+<div class="home-buttons">
+<button class="create-workout-btn action-btn" id="create-workout-btn">Create New Workout</button>
+<button class="show-exercises-btn action-btn" id="show-exercises-btn">Show Exercises</button>
+</div>
+<hr/>
+<div class="workout-list" id="workout-list"></div>
+</div>
+<div class="container" id="exercises-list-view">
+<header>
+<h1>Saved Exercises</h1>
+</header>
+<div id="exercises-list-container"></div>
+<button class="back-btn action-btn" id="back-to-home-btn">Back to Home</button>
+</div>
+<div class="container timer-view" id="timer-view">
+<button class="back-btn action-btn" id="back-btn">← Back to Workouts</button>
+<!-- Cast controls for each screen -->
+<div class="cast-controls" id="cast-controls"><div>
+<button id="link-1">Link TV 1</button>
+<button id="link-2">Link TV 2</button>
+<button id="link-3">Link TV 3</button>
+<button id="link-4">Link TV 4</button>
+</div><div style="margin-top:20px;">
+<button id="start-btn">Start</button>
+<button id="pause-btn">Pause</button>
+<button id="reset-btn">Reset</button>
+</div></div>
+<div class="screen-container">
+<div class="screen" id="screen-1">
+<h3>Screen 1</h3>
+<div class="exercises-container"></div>
+</div>
+<div class="screen" id="screen-2">
+<h3>Screen 2</h3>
+<div class="exercises-container"></div>
+</div>
+<div class="screen" id="screen-3">
+<h3>Screen 3</h3>
+<div class="exercises-container"></div>
+</div>
+<div class="screen" id="screen-4">
+<h3>Screen 4</h3>
+<button class="toggle-mode-btn action-btn" data-screen="4">Switch to Time Display</button>
+<div class="exercises-container"></div>
+</div>
+</div>
+<div class="home-buttons">
+<button class="start-btn action-btn" id="start-btn">Start Workout</button>
+<button class="reset-btn action-btn" disabled="" id="reset-btn">Reset</button>
+</div>
+</div>
+<!-- Workout Modal (Multi-Step Process) -->
+<div class="modal" id="workout-modal">
+<div class="modal-content">
+<div class="modal-header">
+<div class="modal-title">Create New Workout</div>
+<button class="close-btn" id="close-modal">×</button>
+</div>
+<!-- Step 1: Basic Workout Info -->
+<div class="modal-step" id="step-1">
+<div class="input-group">
+<label for="workout-name">Workout Name</label>
+<input id="workout-name" placeholder="e.g., Full Body Routine" type="text">
+</input></div>
+<div class="input-group">
+<label for="workout-description">Description (optional)</label>
+<textarea id="workout-description" placeholder="Describe your workout" rows="3"></textarea>
+</div>
+</div>
+<!-- Step 2: Add Exercises -->
+<div class="modal-step" id="step-2">
+<!-- Saved exercise selector -->
+<div class="input-group" style="margin-bottom: 15px;">
+<label for="saved-exercise-select">Choose saved exercise</label>
+<div style="display:flex;gap:10px;">
+<select id="saved-exercise-select" style="flex:2;">
+<option value="">-- Select saved exercise --</option>
+</select>
+<button class="action-btn" id="add-saved-exercise-btn" style="flex:1;" type="button">Add</button>
+</div>
+</div>
+<div id="exercise-fields">
+<div class="input-group exercise-field">
+<label>Exercise 1</label>
+<div style="display: flex; gap: 10px;">
+<input class="exercise-name" placeholder="Exercise name" style="flex: 2;" type="text"/>
+<input class="exercise-duration" min="1" placeholder="Duration (sec)" style="flex: 1;" type="number" value="30"/>
+<select class="exercise-screen" style="flex: 1;">
+<option value="1">Screen 1</option>
+<option value="2">Screen 2</option>
+<option value="3">Screen 3</option>
+<option value="4">Screen 4</option>
+</select>
+<button class="action-btn save-exercise-template-btn" style="margin-left:10px;">Save</button>
+</div>
+</div>
+</div>
+<div style="margin-top: 15px;">
+<button class="action-btn" id="add-exercise-btn">+ Add Exercise</button>
+</div>
+</div>
+<div class="modal-step" id="step-3">
+<div class="input-group">
+<label for="restDurationInput">Rest Duration (sec)</label>
+<input id="restDurationInput" min="1" type="number" value="15"/>
+</div>
+<div class="input-group">
+<label for="restCountInput">Number of Rests</label>
+<input id="restCountInput" min="1" type="number" value="1"/>
+</div>
+<p style="font-size: 0.9em; color: #7f8c8d;">Configure the rest periods between your exercises.</p>
+</div>
+<div class="modal-step" id="step-4">
+<h3>Review Your Workout</h3>
+<div id="workout-overview"></div>
+</div>
+<div class="modal-actions">
+<button class="action-btn cancel-btn" id="cancel-workout">Cancel</button>
+<button class="action-btn" id="back-step" style="display:none;">Back</button>
+<button class="action-btn" id="next-step">Next</button>
+<button class="action-btn save-btn" id="confirm-workout" style="display:none;">Confirm Workout</button>
+</div>
+</div>
+</div>
+<!-- Exercise Edit Modal -->
+<div class="modal" id="exercise-modal">
+<div class="modal-content">
+<div class="modal-header">
+<div class="modal-title">Edit Exercise</div>
+<button class="close-btn" id="close-exercise-modal">×</button>
+</div>
+<div class="input-group">
+<label for="edit-exercise-name">Exercise Name</label>
+<input id="edit-exercise-name" placeholder="Exercise name" type="text"/>
+</div>
+<div class="input-group">
+<label for="edit-exercise-duration">Duration (sec)</label>
+<input id="edit-exercise-duration" min="1" type="number" value="30"/>
+</div>
+<div class="input-group">
+<label for="edit-exercise-screen">Screen</label>
+<select id="edit-exercise-screen">
+<option value="1">Screen 1</option>
+<option value="2">Screen 2</option>
+<option value="3">Screen 3</option>
+<option value="4">Screen 4</option>
+</select>
+</div>
+<div class="modal-actions">
+<button class="action-btn cancel-btn" id="cancel-edit-exercise">Cancel</button>
+<button class="action-btn save-btn" id="save-edit-exercise">Save Exercise</button>
+</div>
+</div>
+</div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   // App State Variables & DOM References
@@ -1788,5 +1759,5 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 2000);
 });
 </script>
-</body>
+<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=0"></script></body>
 </html>
