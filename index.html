@@ -7,62 +7,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"/>
 
-<!-- Low-level Cast Sender API -->
 <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=0"></script>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    button { margin-right: 10px; padding: 10px 20px; }
-  </style>
-</head>
-<body>
-  <h1>Workout Controller</h1>
-  <div>
-  </div>
-  <div style="margin-top:20px;">
-    <button id="start-btn">Start</button>
-    <button id="pause-btn">Pause</button>
-    <button id="reset-btn">Reset</button>
-  </div>
-
-  <script>
-    const APP_ID = '0656D6B9';
-    const NAMESPACE = 'urn:x-cast:workout.channel';
-    const sessions = {};
-
-    window.__onGCastApiAvailable = function(isAvailable) {
-      if (!isAvailable) return;
-      const request = new chrome.cast.SessionRequest(APP_ID);
-      const config = new chrome.cast.ApiConfig(request, 
-        session => console.log('session listener', session),
-        availability => console.log('receiver availability', availability));
-      chrome.cast.initialize(config, () => console.log('Initialized'), console.error);
-    };
-
-    function linkTV(n) {
-      chrome.cast.requestSession(
-        session => {
-          sessions[n] = session;
-          console.log('Linked screen', n);
-        },
-        err => console.error('Link error', err)
-      );
-    }
-
-    for (let i = 1; i <= 4; i++) {
-      document.getElementById('link-' + i).onclick = () => linkTV(i);
-    }
-
-    function broadcast(msg) {
-      Object.keys(sessions).forEach(k => {
-        sessions[k].sendMessage(NAMESPACE, msg)
-          .catch(console.error);
-      });
-    }
-
-    document.getElementById('start-btn').onclick = () => broadcast({ type:'command', action:'start' });
-    document.getElementById('pause-btn').onclick  = () => broadcast({ type:'command', action:'pause' });
-    document.getElementById('reset-btn').onclick  = () => broadcast({ type:'command', action:'reset' });
-  </script>
 
 
 <script type="module">
@@ -542,12 +487,7 @@
   <div class="container timer-view" id="timer-view">
     <button class="back-btn action-btn" id="back-btn">← Back to Workouts</button>
     <!-- Cast controls for each screen -->
-    <div id="cast-controls" class="cast-controls">
-      <button id="link-1" class="action-btn">Link TV 1</button>
-      <button id="link-2" class="action-btn">Link TV 2</button>
-      <button id="link-3" class="action-btn">Link TV 3</button>
-      <button id="link-4" class="action-btn">Link TV 4</button>
-    </div>
+    <div id="cast-controls" class="cast-controls"></div>
     <div class="screen-container">
       <div class="screen" id="screen-1">
         <h3>Screen 1</h3>
