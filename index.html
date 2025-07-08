@@ -7,52 +7,44 @@
 <title>Workout Timer</title>
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&amp;display=swap" rel="stylesheet"/>
-<!-- Low-level Cast Sender API -->
-
+<!-- Cast SDK -->
+<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 <script>
-const castSessions = { 1: null, 2: null, 3: null, 4: null };
-  const CAST_CHANNEL = 'urn:x-cast:workout.channel';
-  const sessions = {};
-  window['__onGCastApiAvailable'] = function(isAvailable) {
-    console.log('[Cast] API available =', isAvailable);
-    if (!isAvailable) {
-      console.warn('[Cast] Chromecast API not available');
-      return;
-    }
-    const request = new chrome.cast.SessionRequest('0656D6B9');
-    const config = new chrome.cast.ApiConfig(
-      request,
-      session => { console.log('[Cast] Session listener:', session); },
-      availability => { console.log('[Cast] Receiver availability:', availability); }
-    );
-    chrome.cast.initialize(config, () => console.log('[Cast] Initialized'), console.error);
-  };
+    const castSessions = {1:null,2:null,3:null,4:null};
+    const CAST_CHANNEL = 'urn:x-cast:workout.channel';
 
-  function linkScreen(screenNum) {
-    chrome.cast.requestSession(
-      session => {
-        sessions[screenNum] = session;
+    window['__onGCastApiAvailable'] = function(isAvailable) {
+      if (!isAvailable) {
+        console.warn('[Cast] API not available');
+        return;
+      }
+      cast.framework.CastContext.getInstance().setOptions({
+        receiverApplicationId: '0656D6B9',
+        autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
+        resumeSavedSession: false
+      });
+    };
+
+    function linkScreen(screenNum) {
+      cast.framework.CastContext.getInstance().requestSession().then(() => {
+        const session = cast.framework.CastContext.getInstance().getCurrentSession();
         castSessions[screenNum] = session;
-        session.sendMessage(CAST_CHANNEL, { type: 'screen', screen: screenNum })
-          .then(() => console.log('[Cast] Screen ID sent'))
-          .catch(err => console.error('[Cast] Failed to send Screen ID:', err));
-      },
-      err => {
+        session.sendMessage(CAST_CHANNEL, {type:'screen',screen:screenNum})
+          .then(() => console.log(`[Cast] Screen ID ${screenNum} sent`))
+          .catch(err => console.error(`[Cast] Failed to send Screen ID ${screenNum}:`, err));
+      }).catch(err => {
         console.error(`[Cast] Failed to link screen ${screenNum}:`, err);
         alert(`Link to screen ${screenNum} failed: ${err.message}`);
-      }
-    );
-  }
+      });
+    }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    // Replace with your cast button IDs
-    ['1', '2', '3', '4'].forEach(i => {
-      const btn = document.getElementById(`cast-btn-${i}`);
-      if (btn) btn.addEventListener('click', () => linkScreen(i));
+    document.addEventListener('DOMContentLoaded', () => {
+      ['1','2','3','4'].forEach(i => {
+        const btn = document.getElementById('link-' + i);
+        if (btn) btn.addEventListener('click', () => linkScreen(i));
+      });
     });
-  });
-</script>
-<script type="module">
+</script><script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
   import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-database.js";
 
