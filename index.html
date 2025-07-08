@@ -7,19 +7,14 @@
 <title>Workout Timer</title>
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&amp;display=swap" rel="stylesheet"/>
-<!-- Low-level Cast Sender API -->
-
-
+<!-- Cast Framework V3 -->
 <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 <script>
   const castSessions = {1:null,2:null,3:null,4:null};
   const CAST_CHANNEL = 'urn:x-cast:workout.channel';
 
   window['__onGCastApiAvailable'] = function(isAvailable) {
-    if (!isAvailable) {
-      console.warn('[Cast] API not available');
-      return;
-    }
+    if (!isAvailable) { console.warn('[Cast] API not available'); return; }
     cast.framework.CastContext.getInstance().setOptions({
       receiverApplicationId: '0656D6B9',
       autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
@@ -32,19 +27,9 @@
       .then(() => {
         const session = cast.framework.CastContext.getInstance().getCurrentSession();
         castSessions[screenNum] = session;
-        // Inform receiver of the screen ID
-        session.sendMessage(CAST_CHANNEL, { type: 'screen', screen: screenNum })
-          .then(() => console.log(`[Cast] Screen ID ${screenNum} sent`))
-          .catch(err => console.error(err));
-        // Send the exercise payload for this screen
+        session.sendMessage(CAST_CHANNEL, {type:'screen', screen:screenNum});
         const exerciseData = window.currentExercises?.[screenNum] || {};
-        session.sendMessage(CAST_CHANNEL, {
-          type: 'exercise',
-          screen: screenNum,
-          payload: exerciseData
-        })
-        .then(() => console.log(`[Cast] Exercise for screen ${screenNum} sent`, exerciseData))
-        .catch(err => console.error(err));
+        session.sendMessage(CAST_CHANNEL, {type:'exercise', screen:screenNum, payload:exerciseData});
       })
       .catch(err => {
         console.error(`[Cast] Failed to link screen ${screenNum}:`, err);
@@ -59,15 +44,13 @@
     });
   });
 
-  // Example store of current exercises per screen
   window.currentExercises = {
     1: { name: 'Jumping Jacks', duration: 30, reps: 15 },
-    2: { name: 'Push-ups',       duration: 45, reps: 10 },
-    3: { name: 'Squats',         duration: 60, reps: 20 },
-    4: { name: 'Lunges',         duration: 40, reps: 12 }
+    2: { name: 'Push-ups', duration: 45, reps: 10 },
+    3: { name: 'Squats', duration: 60, reps: 20 },
+    4: { name: 'Lunges', duration: 40, reps: 12 }
   };
 </script>
-
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
   import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-database.js";
