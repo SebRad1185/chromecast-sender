@@ -2,56 +2,29 @@
 
 <html lang="en">
 <head>
+
+<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+<script>
+window['__onGCastApiAvailable'] = function(isAvailable) {
+  if (!isAvailable) {
+    console.error('CAF failed to load');
+    return;
+  }
+  const context = cast.framework.CastContext.getInstance();
+  context.setOptions({
+    receiverApplicationId: '0656D6B9',
+    autoJoinPolicy: cast.framework.CastContext.AutoJoinPolicy.ORIGIN_SCOPED,
+    resumeSavedSession: false
+  });
+};
+</script>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Workout Timer</title>
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&amp;display=swap" rel="stylesheet"/>
 <!-- Cast Framework V3 -->
-<script src="https://www.gstatic.com/cast/sdk/libs/caf_sender/v3/cast_framework.js"></script>
-<script>
-  const castSessions = {1:null,2:null,3:null,4:null};
-  const CAST_CHANNEL = 'urn:x-cast:workout.channel';
 
-  window['__onGCastApiAvailable'] = function(isAvailable) {
-      if (isAvailable) {
-        cast.framework.CastContext.getInstance().setOptions({
-          receiverApplicationId: '0656D6B9',
-          autoJoinPolicy: cast.framework.CastContext.AutoJoinPolicy.ORIGIN_SCOPED,
-          resumeSavedSession: false
-        });
-      }
-    };
-
-  function linkScreen(screenNum) {
-    cast.framework.CastContext.getInstance().requestSession()
-      .then(() => {
-        const session = cast.framework.CastContext.getInstance().getCurrentSession();
-        castSessions[screenNum] = session;
-        session.sendMessage(CAST_CHANNEL, {type:'screen', screen:screenNum});
-        const exerciseData = window.currentExercises?.[screenNum] || {};
-        session.sendMessage(CAST_CHANNEL, {type:'exercise', screen:screenNum, payload:exerciseData});
-      })
-      .catch(err => {
-        console.error(`[Cast] Failed to link screen ${screenNum}:`, err);
-        alert(`Link to screen ${screenNum} failed: ${err.message}`);
-      });
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    ['1','2','3','4'].forEach(i => {
-      const btn = document.getElementById('link-' + i);
-      if (btn) btn.addEventListener('click', () => linkScreen(i));
-    });
-  });
-
-  window.currentExercises = {
-    1: { name: 'Jumping Jacks', duration: 30, reps: 15 },
-    2: { name: 'Push-ups', duration: 45, reps: 10 },
-    3: { name: 'Squats', duration: 60, reps: 20 },
-    4: { name: 'Lunges', duration: 40, reps: 12 }
-  };
-</script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
   import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-database.js";
