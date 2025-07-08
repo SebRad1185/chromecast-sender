@@ -7,7 +7,9 @@
 <title>Workout Timer</title>
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&amp;display=swap" rel="stylesheet"/>
-<!-- Cast SDK -->
+<!-- Low-level Cast Sender API -->
+
+
 <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 <script>
   const castSessions = {1:null,2:null,3:null,4:null};
@@ -30,9 +32,11 @@
       .then(() => {
         const session = cast.framework.CastContext.getInstance().getCurrentSession();
         castSessions[screenNum] = session;
+        // Inform receiver of the screen ID
         session.sendMessage(CAST_CHANNEL, { type: 'screen', screen: screenNum })
           .then(() => console.log(`[Cast] Screen ID ${screenNum} sent`))
           .catch(err => console.error(err));
+        // Send the exercise payload for this screen
         const exerciseData = window.currentExercises?.[screenNum] || {};
         session.sendMessage(CAST_CHANNEL, {
           type: 'exercise',
@@ -55,6 +59,7 @@
     });
   });
 
+  // Example store of current exercises per screen
   window.currentExercises = {
     1: { name: 'Jumping Jacks', duration: 30, reps: 15 },
     2: { name: 'Push-ups',       duration: 45, reps: 10 },
