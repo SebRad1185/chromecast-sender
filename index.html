@@ -8,19 +8,20 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&amp;display=swap" rel="stylesheet"/>
 <!-- Cast Framework V3 -->
-<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+<script src="https://www.gstatic.com/cast/sdk/libs/caf_sender/v3/cast_framework.js"></script>
 <script>
   const castSessions = {1:null,2:null,3:null,4:null};
   const CAST_CHANNEL = 'urn:x-cast:workout.channel';
 
   window['__onGCastApiAvailable'] = function(isAvailable) {
-    if (!isAvailable) { console.warn('[Cast] API not available'); return; }
-    cast.framework.CastContext.getInstance().setOptions({
-      receiverApplicationId: '0656D6B9',
-      autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
-      resumeSavedSession: false
-    });
-  };
+      if (isAvailable) {
+        cast.framework.CastContext.getInstance().setOptions({
+          receiverApplicationId: '0656D6B9',
+          autoJoinPolicy: cast.framework.CastContext.AutoJoinPolicy.ORIGIN_SCOPED,
+          resumeSavedSession: false
+        });
+      }
+    };
 
   function linkScreen(screenNum) {
     cast.framework.CastContext.getInstance().requestSession()
